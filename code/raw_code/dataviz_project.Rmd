@@ -6,11 +6,8 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-## set working directory
-knitr::opts_knit$set(root.dir = '/cloud/project')
-
 ## install packages if necessary
-list.of.packages <- c("janitor", "ggplot2", "dplyr", "lubridate", "zoo", "forcats", "ggthemes")
+list.of.packages <- c("janitor", "ggplot2", "dplyr", "lubridate", "zoo", "forcats", "ggthemes", "knitr", "rmarkdown")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -22,6 +19,10 @@ library(lubridate)
 library(zoo)
 library(forcats)
 library(ggthemes)
+library(knitr)
+
+## set working directory
+knitr::opts_knit$set(root.dir = '/cloud/project')
 ```
 
 # Part 1: Exploratory Data Analysis
@@ -40,14 +41,17 @@ pets <- read.csv("/cloud/project/dataviz_project/data/raw_data/seattle_pet_licen
 ## Explore the Data
 
 ```{r pet-explore, warning=FALSE} 
-## Include code here to explore the data 
+## Include code here to explore the data
+glimpse(pets)
+
 ## and answer the questions in the exercise
 ```
 
 ## Visualize the Data
 
 ```{r pet-barchart, warning=FALSE} 
-## visual breakdown of how many of each species 
+## visual breakdown of how many of each species
+
 ## are included in the dataset
 ggplot(pets) +
   geom_bar(aes(x=species))
@@ -55,9 +59,9 @@ ggplot(pets) +
 
 ```{r pet-cat-table, warning=FALSE} 
 ## Table: Most frequent Cat Name 
-DATASET %>% 
-  filter(species == "SPECIES",VARIABLE != "") %>%
-  group_by(VARIABLE) %>% 
+pets %>% 
+  filter(species == "Cat", animal_s_name != "") %>%
+  group_by(animal_s_name) %>% 
   summarise(n = n()) %>% 
   arrange(-n) %>%
   top_n(n = 10) %>%
@@ -67,23 +71,29 @@ DATASET %>%
 ```{r pet-dog-table, warning=FALSE} 
 ## Table: Most frequent Dog Name
 ## ADD CODE!
+pets %>% 
+  filter(species == "Dog", animal_s_name !="") %>%
+  group_by(animal_s_name) %>% 
+  summarise(n = n()) %>% 
+  arrange(-n) %>%
+  top_n(n = 10) %>%
+kable(., caption = "Top 10 Dog Names in Seattle")
 ```
 
 ```{r pet-linechart, warning=FALSE} 
 ## add date and ym columns
-pets <- pets %>%  
-  mutate(date =  lubridate::ymd_hms(license_issue_date),
-         ym = as.yearmon(pets$date, "%y%m"))
+pets$date <- lubridate::ymd_hms(pets$license_issue_date)
+pets$ym <- as.yearmon(pets$date, "%y%m")
 
 ## how the number of licenses recorded has changed over time
 pets %>%
   ## group by yearmonth (`ym`)
-  function_name(VARIABLE) %>% 
+  group_by(ym) %>% 
   ## count number within each group
-  function_name(n=n()) %>%
-  ggplot(., aes(VARIABLE, n)) + 
+  count(n=n()) %>%
+  ggplot(., aes(ym, n)) + 
   ## geom name for line chart
-  geom_GEOM() +
+  geom_line() +
   scale_x_yearmon() + 
   xlab("") + 
   ylab("Number of licenses")
@@ -91,7 +101,13 @@ pets %>%
 
 ```{r pet-plot, warning=FALSE} 
 ### Explore the data -- create your own plot!
-
+top_names <- pets %>%
+ group_by(animal_s_name) %>%
+count() %>%
+  arrange(-n) %>%
+  top_n(n = 10)
+ggplot(top_names) +
+ geom_bar(aes(x=animal_s_name, y=n), stat="identity")
 ```
 
 # Part 2: Explanatory Data Analysis
@@ -102,7 +118,7 @@ The data used in this part of the project were dowloaded from [FiveThirtyEight](
 
 ```{r meat-data, warning=FALSE} 
 ## read in the data
-steak <- read.csv("data/raw_data/steak-risk-survey.csv", stringsAsFactors = FALSE) %>%
+steak <- read.csv("/cloud/project/dataviz_project/data/raw_data/steak-risk-survey.csv", stringsAsFactors = FALSE) %>%
   ## remove first row which just includes the word "Response" in each column
   slice(2:n())
 ```
