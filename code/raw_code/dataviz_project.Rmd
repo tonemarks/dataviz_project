@@ -189,7 +189,7 @@ p <- ggplot(pref) +
                 subtitle="From a survey of 432 steak-eating Americans",
                 caption="FiveThirtyEight: Surveymonkey") +
   ## change the theme (use ggthemes)
-  theme_bw() +
+  theme_light() +
   ## fine tune the theme
   theme(axis.text = element_text(size = 14), 
                 title = element_text(size = 16), 
@@ -200,6 +200,7 @@ p <- ggplot(pref) +
                 axis.text.x = element_blank() 
   )
 
+
 p
 ```
 
@@ -207,19 +208,144 @@ p
 
 ```{r save-plot, warning=FALSE}
 ## save plot to figures/explanatory_figures directory
-ggsave(plot = OBJECT_NAME, filename = FILENAME, width = 8, height = 4)
+ggsave(plot = p, filename = "american_steak.png", width = 8, height = 4)
 ```
 
 ## Visualize the Data
+```{r meat-visualize2, warning=FALSE}
+pref.male <- steak %>% 
+  mutate(steak_pref = factor(How.do.you.like.your.steak.prepared.,
+                             levels = c("Well",
+                                        "Medium Well",
+                                        "Medium",
+                                        "Medium rare",
+                                        "Rare"))) %>% 
+  filter(steak_pref != "") %>%
+  filter(Gender=="Male")%>%
+  group_by(steak_pref) %>% 
+  summarise(n = n()) %>%
+  mutate(prop = n / sum(n))
+  
+  pref.female <- steak %>% 
+  mutate(steak_pref = factor(How.do.you.like.your.steak.prepared.,
+                             levels = c("Well",
+                                        "Medium Well",
+                                        "Medium",
+                                        "Medium rare",
+                                        "Rare"))) %>% 
+  filter(steak_pref != "") %>%
+  filter(Gender=="Female")%>%
+  group_by(steak_pref) %>% 
+  summarise(n = n()) %>%
+  mutate(prop = n / sum(n))
 
-```{r meat-plot, warning=FALSE} 
-### Explore the data -- create your own plot!
+p1 <- ggplot(pref.male) +
+  ## specify you want to generate a bar chart
+  geom_bar(aes(x = steak_pref, y = prop, fill = steak_pref),
+                stat = 'identity', 
+                width = 0.3) +
+  ## this adds text labels (you don't have to change anything here)
+  geom_text(aes(label = paste0(as.integer(prop*100),"%"),
+                x = steak_pref,
+                y = prop), 
+            stat= "identity", 
+            hjust = -0.2, 
+            size = 5,
+            color = "grey40") +
+  ## flip coordinates to make horizontal box plot
+  coord_flip() +
+  ## change the colors of the bars
+  scale_fill_manual(values = c("#370B01", 
+                           "#70402C",
+                           "#955732", 
+                           "#B36153",
+                           "#B5413F")) +
+  ## change the scale/labels of the steak-wellness variable (x-axis)
+  scale_x_discrete(limits = levels(fct_rev(pref$steak_pref)),
+                labels = c("Well", 
+                           "Medium Well" = "Medium-well",
+                           "Medium",
+                           "Medium rare"="Medium-rare",
+                           "Rare")) +
+  ## change the scale/lables of the percent axis (y-axis)
+  scale_y_discrete(labels = scales::percent, 
+                expand = c(mult = c(0,0), 
+                           add = c(0,0.035))) +
+  ## change the title, subtitle, and caption
+  labs(title="'Male'", 
+                subtitle="From a survey of 432 steak-eating Americans",
+                caption="FiveThirtyEight: Surveymonkey") +
+  ## change the theme (use ggthemes)
+  theme_light() +
+  ## fine tune the theme
+  theme(axis.text = element_text(size = 14), 
+                title = element_text(size = 16), 
+                legend.position="none", 
+                plot.caption=element_text(size = 12), 
+                panel.grid.major = element_blank(), 
+                panel.grid.minor = element_blank(),
+                axis.text.x = element_blank() 
+  )
 
+
+
+p2 <- ggplot(pref.female) +
+  ## specify you want to generate a bar chart
+  geom_bar(aes(x = steak_pref, y = prop, fill = steak_pref),
+                stat = 'identity', 
+                width = 0.3) +
+  ## this adds text labels (you don't have to change anything here)
+  geom_text(aes(label = paste0(as.integer(prop*100),"%"),
+                x = steak_pref,
+                y = prop), 
+            stat= "identity", 
+            hjust = -0.2, 
+            size = 5,
+            color = "grey40") +
+  ## flip coordinates to make horizontal box plot
+  coord_flip() +
+  ## change the colors of the bars
+  scale_fill_manual(values = c("#370B01", 
+                           "#70402C",
+                           "#955732", 
+                           "#B36153",
+                           "#B5413F")) +
+  ## change the scale/labels of the steak-wellness variable (x-axis)
+  scale_x_discrete(limits = levels(fct_rev(pref$steak_pref)),
+                labels = c("Well", 
+                           "Medium Well" = "Medium-well",
+                           "Medium",
+                           "Medium rare"="Medium-rare",
+                           "Rare")) +
+  ## change the scale/lables of the percent axis (y-axis)
+  scale_y_discrete(labels = scales::percent, 
+                expand = c(mult = c(0,0), 
+                           add = c(0,0.035))) +
+  ## change the title, subtitle, and caption
+  labs(title="'Female'", 
+                subtitle="From a survey of 432 steak-eating Americans",
+                caption="FiveThirtyEight: Surveymonkey") +
+  ## change the theme (use ggthemes)
+  theme_light() +
+  ## fine tune the theme
+  theme(axis.text = element_text(size = 14), 
+                title = element_text(size = 16), 
+                legend.position="none", 
+                plot.caption=element_text(size = 12), 
+                panel.grid.major = element_blank(), 
+                panel.grid.minor = element_blank(),
+                axis.text.x = element_blank() 
+  )
+
+
+
+library(gridExtra)
+p3 <-grid.arrange(p1, p2, ncol = 2)
 ```
 
 ## Save this plot 
 
 ```{r save-meat-plot, warning=FALSE}
 ## save plot to figures/explanatory_figures directory
-ggsave(plot = OBJECT_NAME, filename = DIFFERENT_FILENAME)
+ggsave(plot = p3 , filename = "gender_steak_pref.png")
 ```
